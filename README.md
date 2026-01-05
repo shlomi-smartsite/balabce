@@ -1,22 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Balance - ניהול הכנסות והוצאות
 
-## Getting Started
+אפליקציה מודרנית לניהול פיננסי אישי עם אחסון מלא בשליטת המשתמש.
 
-First, run the development server:
+## ✨ תכונות עיקריות
+
+- **פרטיות מלאה** - כל הנתונים נשמרים ב-Google Sheets האישי שלך
+- **בעלות על הדאטה** - אין שמירה של מידע פיננסי בשרת
+- **ממשק מודרני** - עיצוב מינימלי וחד עם צבעים ברורים
+- **ניתוח מתקדם** - גרפים, סטטיסטיקות ומעקב אחר יתרה
+- **סנכרון אוטומטי** - עבודה חלקה עם Google Sheets
+
+## 🚀 התחלת עבודה
+
+### דרישות מקדימות
+
+- Node.js 18+ 
+- חשבון Google
+- Google Cloud Project עם Sheets API מופעל
+
+### הגדרת Google OAuth
+
+1. עבור ל-[Google Cloud Console](https://console.cloud.google.com)
+2. צור פרויקט חדש או בחר קיים
+3. הפעל את Google Sheets API
+4. צור OAuth 2.0 credentials:
+   - Application type: Web application
+   - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
+5. העתק את Client ID ו-Client Secret
+
+### התקנה
+
+```bash
+# התקן תלויות
+npm install
+
+# העתק את קובץ הסביבה
+cp .env.example .env.local
+
+# ערוך את .env.local והוסף את ה-credentials שלך
+```
+
+### הגדרת משתני סביבה
+
+ערוך את `.env.local`:
+
+```env
+GOOGLE_CLIENT_ID=your_client_id_here
+GOOGLE_CLIENT_SECRET=your_client_secret_here
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=generate_random_secret_here
+```
+
+ליצירת `NEXTAUTH_SECRET`:
+```bash
+openssl rand -base64 32
+```
+
+### הרצת האפליקציה
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
