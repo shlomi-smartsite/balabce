@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '@/store/useStore'
 import { StatsCards } from '@/components/StatsCards'
 import { AddTransactionDialog } from '@/components/AddTransactionDialog'
+import { ManageCategoriesDialog } from '@/components/ManageCategoriesDialog'
+import { MobileMenu } from '@/components/MobileMenu'
 import { TransactionsList } from '@/components/TransactionsList'
 import { CategoryChart } from '@/components/CategoryChart'
 import { Button } from '@/components/ui/button'
@@ -105,6 +107,11 @@ export default function Dashboard() {
     }
   }
 
+  const handleCategoryUpdate = async () => {
+    if (!spreadsheetId) return
+    await syncData()
+  }
+
   const totalIncome = transactions
     .filter((t) => t.type === 'הכנסה')
     .reduce((sum, t) => sum + t.amount, 0)
@@ -142,7 +149,7 @@ export default function Dashboard() {
                   href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  className="hidden lg:flex text-sm text-blue-600 hover:text-blue-700 items-center gap-1"
                 >
                   <FileSpreadsheet className="h-4 w-4" />
                   פתח ב-Sheets
@@ -153,18 +160,53 @@ export default function Dashboard() {
               <p className="text-sm text-slate-600 hidden sm:block">
                 {session.user?.email}
               </p>
+              
+              {/* Mobile Menu */}
+              <MobileMenu 
+                spreadsheetId={spreadsheetId}
+                categories={categories}
+                onCategoriesUpdate={handleCategoryUpdate}
+              />
+              
+              {/* Desktop Actions */}
+              <div className="hidden lg:flex items-center gap-3">
+                <ManageCategoriesDialog 
+                  categories={categories} 
+                  spreadsheetId={spreadsheetId}
+                  onUpdate={handleCategoryUpdate}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => syncData()}
+                  disabled={syncing}
+                >
+                  <RefreshCw className={`h-4 w-4 ml-2 ${syncing ? 'animate-spin' : ''}`} />
+                  {syncing ? 'מסנכרן...' : 'סנכרן'}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                  <LogOut className="h-4 w-4 ml-2" />
+                  התנתק
+                </Button>
+              </div>
+              
+              {/* Mobile Sync & Logout */}
               <Button
                 variant="outline"
                 size="sm"
+                className="lg:hidden"
                 onClick={() => syncData()}
                 disabled={syncing}
               >
-                <RefreshCw className={`h-4 w-4 ml-2 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'מסנכרן...' : 'סנכרן'}
+                <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>
-                <LogOut className="h-4 w-4 ml-2" />
-                התנתק
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="lg:hidden"
+                onClick={() => signOut()}
+              >
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -177,7 +219,7 @@ export default function Dashboard() {
             <h2 className="text-3xl font-bold text-slate-900">לוח בקרה</h2>
             {lastSync && (
               <p className="text-sm text-slate-500 mt-1">
-                סונכרן לאחרונה: {new Date(lastSync).toLocaleString('he-IL')}
+                סונכרן לאחרונה: {lastSync.toLocaleString('he-IL')}
               </p>
             )}
           </div>

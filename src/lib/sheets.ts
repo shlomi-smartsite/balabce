@@ -161,3 +161,121 @@ export async function getCategories(spreadsheetId: string) {
     type: row[1] || '',
   }))
 }
+
+export async function addCategory(spreadsheetId: string, category: {
+  name: string
+  type: string
+}) {
+  const sheets = await getSheetsClient()
+  
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: 'Categories!A:B',
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[category.name, category.type]],
+    },
+  })
+}
+
+export async function deleteCategory(spreadsheetId: string, categoryName: string, categoryType: string) {
+  const sheets = await getSheetsClient()
+  
+  // Get all categories
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: 'Categories!A2:B',
+  })
+
+  const rows = response.data.values || []
+  
+  // Find the row to delete
+  const rowIndex = rows.findIndex(
+    (row) => row[0] === categoryName && row[1] === categoryType
+  )
+  
+  if (rowIndex === -1) {
+    throw new Error('Category not found')
+  }
+
+  // Delete the row (add 2 because: 1 for header, 1 for 0-based to 1-based)
+  const sheetId = await getSheetId(spreadsheetId, 'Categories')
+  
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: 'ROWS',
+              startIndex: rowIndex + 1, // +1 for header
+              endIndex: rowIndex + 2,
+            },
+          },
+        },
+      ],
+    },
+  })
+}
+
+async function getSheetId(spreadsheetId: string, sheetName: string): Promise<number> {
+  const sheets = await getSheetsClient()
+  
+  const response = await sheets.spreadsheets.get({
+    spreadsheetId,
+  })
+
+  const sheet = response.data.sheets?.find(
+    (s) => s.properties?.title === sheetName
+  )
+
+  if (!sheet?.properties?.sheetId) {
+    throw new Error(`Sheet ${sheetName} not found`)
+  }
+
+  return sheet.properties.sheetId
+}
+
+export async function reorderCategories(
+  spreadsheetId: string,
+  categories: Array<{ name: string; type: string }>,
+  type: string
+) {
+  const sheets = await getSheetsClient()
+  
+  // Get all current categories
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: 'Categories!A2:B',
+  })
+
+  const allRows = response.data.values || []
+  
+  // Separate by type
+  const otherTypeCategories = allRows.filter(row => row[1] !== type)
+  const reorderedCategories = categories.map(c => [c.name, c.type])
+  
+  // Combine: other type first, then reordered type
+  const newRows = type === 'הכנסה' 
+    ? [...reorderedCategories, ...otherTypeCategories]
+    : [...otherTypeCategories, ...reorderedCategories]
+  
+  // Clear and rewrite all categories
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: 'Categories!A2:B',
+  })
+  
+  if (newRows.length > 0) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: 'Categories!A2:B',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: newRows,
+      },
+    })
+  }
+}
