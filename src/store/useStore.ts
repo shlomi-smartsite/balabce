@@ -18,12 +18,14 @@ export interface Category {
 
 interface StoreState {
   spreadsheetId: string | null
+  userEmail: string | null
   transactions: Transaction[]
   categories: Category[]
   isLoading: boolean
   lastSync: Date | null
   
-  setSpreadsheetId: (id: string) => void
+  setSpreadsheetId: (id: string, email: string) => void
+  setUserEmail: (email: string) => void
   setTransactions: (transactions: Transaction[]) => void
   setCategories: (categories: Category[]) => void
   addTransaction: (transaction: Transaction) => void
@@ -36,12 +38,14 @@ export const useStore = create<StoreState>()(
   persist(
     (set) => ({
       spreadsheetId: null,
+      userEmail: null,
       transactions: [],
       categories: [],
       isLoading: false,
       lastSync: null,
 
-      setSpreadsheetId: (id) => set({ spreadsheetId: id }),
+      setSpreadsheetId: (id, email) => set({ spreadsheetId: id, userEmail: email }),
+      setUserEmail: (email) => set({ userEmail: email }),
       setTransactions: (transactions) => set({ transactions }),
       setCategories: (categories) => set({ categories }),
       addTransaction: (transaction) =>
@@ -53,6 +57,7 @@ export const useStore = create<StoreState>()(
       reset: () =>
         set({
           spreadsheetId: null,
+          userEmail: null,
           transactions: [],
           categories: [],
           isLoading: false,

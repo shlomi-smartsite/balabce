@@ -22,10 +22,12 @@ export default function Dashboard() {
 
   const {
     spreadsheetId,
+    userEmail,
     transactions,
     categories,
     lastSync,
     setSpreadsheetId,
+    setUserEmail,
     setTransactions,
     setCategories,
     setLastSync,
@@ -38,14 +40,25 @@ export default function Dashboard() {
   }, [status, router])
 
   useEffect(() => {
-    if (session && !spreadsheetId) {
-      initializeSheet()
-    } else if (session && spreadsheetId) {
+    if (!session) return
+    
+    // בדוק אם המשתמש הנוכחי שונה מזה ששמור
+    const currentEmail = session.user?.email
+    if (currentEmail && userEmail && currentEmail !== userEmail) {
+      // משתמש אחר - צריך לאתחל מחדש
+      setSpreadsheetId('', currentEmail)
+      setUserEmail(currentEmail)
+      initializeSheet(currentEmail)
+    } else if (!spreadsheetId) {
+      // אין spreadsheet - צור חדש
+      initializeSheet(currentEmail!)
+    } else {
+      // יש spreadsheet - סנכרן
       syncData()
     }
-  }, [session, spreadsheetId])
+  }, [session, spreadsheetId, userEmail])
 
-  const initializeSheet = async () => {
+  const initializeSheet = async (email: string) => {
     setLoading(true)
     try {
       const response = await fetch('/api/sheets/create', {
@@ -54,7 +67,7 @@ export default function Dashboard() {
       const data = await response.json()
       
       if (data.spreadsheetId) {
-        setSpreadsheetId(data.spreadsheetId)
+        setSpreadsheetId(data.spreadsheetId, email)
         await syncData(data.spreadsheetId)
       }
     } catch (error) {
@@ -127,7 +140,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="h-16 w-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-slate-600">טוען...</p>
+          <p className="text-gray-800 font-medium">טוען...</p>
         </div>
       </div>
     )
@@ -157,7 +170,7 @@ export default function Dashboard() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <p className="text-sm text-slate-600 hidden sm:block">
+              <p className="text-sm text-gray-700 font-medium hidden sm:block">
                 {session.user?.email}
               </p>
               
@@ -216,9 +229,9 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">לוח בקרה</h2>
+            <h2 className="text-3xl font-bold text-gray-900">לוח בקרה</h2>
             {lastSync && (
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-gray-600 font-medium mt-1">
                 סונכרן לאחרונה: {lastSync.toLocaleString('he-IL')}
               </p>
             )}

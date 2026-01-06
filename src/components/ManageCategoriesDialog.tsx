@@ -207,7 +207,7 @@ export function ManageCategoriesDialog({ categories = [], onUpdate, spreadsheetI
                 >
                   <div className="space-y-2">
                     {incomeCategories.length === 0 ? (
-                      <p className="text-sm text-slate-500 text-center py-4">אין קטגוריות</p>
+                      <p className="text-sm text-gray-600 font-medium text-center py-4">אין קטגוריות</p>
                     ) : (
                       incomeCategories.map((category) => (
                         <SortableCategoryItem
@@ -242,7 +242,7 @@ export function ManageCategoriesDialog({ categories = [], onUpdate, spreadsheetI
                 >
                   <div className="space-y-2">
                     {expenseCategories.length === 0 ? (
-                      <p className="text-sm text-slate-500 text-center py-4">אין קטגוריות</p>
+                      <p className="text-sm text-gray-600 font-medium text-center py-4">אין קטגוריות</p>
                     ) : (
                       expenseCategories.map((category) => (
                         <SortableCategoryItem

@@ -22,7 +22,7 @@ export function TransactionsList({ transactions }: TransactionsListProps) {
       <CardContent>
         <div className="space-y-3">
           {sortedTransactions.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">אין עסקאות להצגה</p>
+            <p className="text-center text-gray-600 font-medium py-8">אין עסקאות להצגה</p>
           ) : (
             sortedTransactions.map((transaction) => (
               <div
@@ -44,10 +44,10 @@ export function TransactionsList({ transactions }: TransactionsListProps) {
                     )}
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">
+                    <p className="font-bold text-gray-900">
                       {transaction.description || transaction.category}
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-gray-600 font-medium">
                       {transaction.category} • {formatDate(transaction.date)}
                     </p>
                   </div>
@@ -63,7 +63,7 @@ export function TransactionsList({ transactions }: TransactionsListProps) {
                     {transaction.type === 'הכנסה' ? '+' : '-'}
                     {formatCurrency(transaction.amount)}
                   </p>
-                  <p className="text-xs text-slate-500">{transaction.paymentMethod}</p>
+                  <p className="text-xs text-gray-600 font-medium">{transaction.paymentMethod}</p>
                 </div>
               </div>
             ))

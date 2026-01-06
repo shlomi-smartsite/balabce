@@ -20,7 +20,55 @@ export async function getSheetsClient() {
   return google.sheets({ version: 'v4', auth: oauth2Client })
 }
 
+export async function getDriveClient() {
+  const session = await auth()
+  
+  if (!session?.accessToken) {
+    throw new Error('No access token available')
+  }
+
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET
+  )
+
+  oauth2Client.setCredentials({
+    access_token: session.accessToken as string,
+  })
+
+  return google.drive({ version: 'v3', auth: oauth2Client })
+}
+
+export async function findExistingBalanceSheet(userEmail: string) {
+  try {
+    const drive = await getDriveClient()
+    const fileName = `ניהול הכנסות והוצאות - ${userEmail}`
+    
+    const response = await drive.files.list({
+      q: `name='${fileName}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+      fields: 'files(id, name)',
+      spaces: 'drive',
+    })
+
+    if (response.data.files && response.data.files.length > 0) {
+      return response.data.files[0].id || null
+    }
+    
+    return null
+  } catch (error) {
+    console.error('Error finding existing sheet:', error)
+    return null
+  }
+}
+
 export async function createBalanceSheet(userId: string, userEmail: string) {
+  // חפש קובץ קיים לפני יצירת חדש
+  const existingId = await findExistingBalanceSheet(userEmail)
+  if (existingId) {
+    console.log('Found existing spreadsheet:', existingId)
+    return existingId
+  }
+
   const sheets = await getSheetsClient()
   
   // Create new spreadsheet

@@ -40,7 +40,7 @@ export function CategoryChart({ transactions, type }: CategoryChartProps) {
           <CardTitle>התפלגות לפי קטגוריה - {type}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500 py-8">אין נתונים להצגה</p>
+          <p className="text-center text-gray-600 font-medium py-8">אין נתונים להצגה</p>
         </CardContent>
       </Card>
     )
