@@ -42,18 +42,21 @@ export async function getDriveClient() {
 export async function findExistingBalanceSheet(userEmail: string) {
   try {
     const drive = await getDriveClient()
-    const fileName = `ניהול הכנסות והוצאות - ${userEmail}`
     
+    // חפש קבצים שמתחילים ב"ניהול הכנסות והוצאות" וכוללים את המייל
     const response = await drive.files.list({
-      q: `name='${fileName}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
-      fields: 'files(id, name)',
+      q: `name contains 'ניהול הכנסות והוצאות' and name contains '${userEmail}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+      fields: 'files(id, name, createdTime)',
       spaces: 'drive',
+      orderBy: 'createdTime desc', // הקובץ האחרון שנוצר
     })
 
     if (response.data.files && response.data.files.length > 0) {
+      console.log('Found existing spreadsheet:', response.data.files[0].name, response.data.files[0].id)
       return response.data.files[0].id || null
     }
     
+    console.log('No existing spreadsheet found for:', userEmail)
     return null
   } catch (error) {
     console.error('Error finding existing sheet:', error)

@@ -42,16 +42,26 @@ export default function Dashboard() {
   useEffect(() => {
     if (!session) return
     
-    // בדוק אם המשתמש הנוכחי שונה מזה ששמור
     const currentEmail = session.user?.email
-    if (currentEmail && userEmail && currentEmail !== userEmail) {
+    if (!currentEmail) return
+
+    // בדוק אם המשתמש הנוכחי שונה מזה ששמור
+    if (userEmail && currentEmail !== userEmail) {
       // משתמש אחר - צריך לאתחל מחדש
       setSpreadsheetId('', currentEmail)
       setUserEmail(currentEmail)
       initializeSheet(currentEmail)
-    } else if (!spreadsheetId) {
-      // אין spreadsheet - צור חדש
-      initializeSheet(currentEmail!)
+      return
+    }
+    
+    // אם אין userEmail שמור - צריך לאתחל
+    if (!userEmail) {
+      setUserEmail(currentEmail)
+    }
+    
+    // תמיד נסה למצוא/ליצור קובץ אם אין ID
+    if (!spreadsheetId) {
+      initializeSheet(currentEmail)
     } else {
       // יש spreadsheet - סנכרן
       syncData()
