@@ -10,9 +10,9 @@ const buttonVariants = cva(
       variant: {
         default: "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98]",
         destructive: "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-[1.02]",
-        outline: "border-2 border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 shadow-sm",
-        secondary: "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-900 hover:bg-gradient-to-r hover:from-slate-200 hover:to-slate-300 shadow-sm",
-        ghost: "hover:bg-slate-100 hover:text-slate-900",
+        outline: "border-2 border-gray-300 bg-white text-gray-900 font-semibold hover:bg-gray-50 hover:border-gray-400 shadow-sm",
+        secondary: "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-900 font-semibold hover:bg-gradient-to-r hover:from-gray-200 hover:to-gray-300 shadow-sm",
+        ghost: "text-gray-900 font-semibold hover:bg-gray-100 hover:text-gray-900",
         link: "text-blue-600 underline-offset-4 hover:underline",
         success: "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-[1.02]",
       },
