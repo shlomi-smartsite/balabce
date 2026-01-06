@@ -59,12 +59,12 @@ export const useStore = create<StoreState>()(
           transactions: [...state.transactions, transaction],
         })),
       setLoading: (isLoading) => set({ isLoading }),
-      setLspreadsheetYear: null,
-          astSync: (date) => set({ lastSync: date }),
+      setLastSync: (date) => set({ lastSync: date }),
       reset: () =>
         set({
           spreadsheetId: null,
           userEmail: null,
+          spreadsheetYear: null,
           transactions: [],
           categories: [],
           isLoading: false,
