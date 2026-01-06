@@ -23,6 +23,7 @@ export default function Dashboard() {
   const {
     spreadsheetId,
     userEmail,
+    spreadsheetYear,
     transactions,
     categories,
     lastSync,
@@ -45,11 +46,21 @@ export default function Dashboard() {
     const currentEmail = session.user?.email
     if (!currentEmail) return
 
+    const currentYear = new Date().getFullYear()
+
     // בדוק אם המשתמש הנוכחי שונה מזה ששמור
     if (userEmail && currentEmail !== userEmail) {
       // משתמש אחר - צריך לאתחל מחדש
       setSpreadsheetId('', currentEmail)
       setUserEmail(currentEmail)
+      initializeSheet(currentEmail)
+      return
+    }
+    
+    // בדוק אם השנה השתנתה - צור קובץ חדש לשנה החדשה!
+    if (spreadsheetYear && currentYear !== spreadsheetYear) {
+      console.log(`🎉 שנה חדשה! ${spreadsheetYear} → ${currentYear}. יוצר קובץ חדש...`)
+      setSpreadsheetId('', currentEmail)
       initializeSheet(currentEmail)
       return
     }
@@ -66,7 +77,7 @@ export default function Dashboard() {
       // יש spreadsheet - סנכרן
       syncData()
     }
-  }, [session, spreadsheetId, userEmail])
+  }, [session, spreadsheetId, userEmail, spreadsheetYear])
 
   const initializeSheet = async (email: string) => {
     setLoading(true)
@@ -98,6 +109,16 @@ export default function Dashboard() {
         fetch(`/api/sheets/categories?spreadsheetId=${id}`),
       ])
 
+      // אם הקובץ לא קיים (404 או 500), נקה ויצור חדש
+      if (!transactionsRes.ok || !categoriesRes.ok) {
+        console.log('❌ Spreadsheet not found, clearing and creating new one...')
+        setSpreadsheetId('', session?.user?.email || '')
+        if (session?.user?.email) {
+          await initializeSheet(session.user.email)
+        }
+        return
+      }
+
       const transactionsData = await transactionsRes.json()
       const categoriesData = await categoriesRes.json()
 
@@ -106,6 +127,11 @@ export default function Dashboard() {
       setLastSync(new Date())
     } catch (error) {
       console.error('Error syncing data:', error)
+      // בשגיאה, נקה ויצור חדש
+      setSpreadsheetId('', session?.user?.email || '')
+      if (session?.user?.email) {
+        await initializeSheet(session.user.email)
+      }
     } finally {
       setSyncing(false)
     }

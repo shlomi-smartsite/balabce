@@ -19,6 +19,7 @@ export interface Category {
 interface StoreState {
   spreadsheetId: string | null
   userEmail: string | null
+  spreadsheetYear: number | null
   transactions: Transaction[]
   categories: Category[]
   isLoading: boolean
@@ -39,12 +40,17 @@ export const useStore = create<StoreState>()(
     (set) => ({
       spreadsheetId: null,
       userEmail: null,
+      spreadsheetYear: null,
       transactions: [],
       categories: [],
       isLoading: false,
       lastSync: null,
 
-      setSpreadsheetId: (id, email) => set({ spreadsheetId: id, userEmail: email }),
+      setSpreadsheetId: (id, email) => set({ 
+        spreadsheetId: id, 
+        userEmail: email,
+        spreadsheetYear: new Date().getFullYear()
+      }),
       setUserEmail: (email) => set({ userEmail: email }),
       setTransactions: (transactions) => set({ transactions }),
       setCategories: (categories) => set({ categories }),
@@ -53,7 +59,8 @@ export const useStore = create<StoreState>()(
           transactions: [...state.transactions, transaction],
         })),
       setLoading: (isLoading) => set({ isLoading }),
-      setLastSync: (date) => set({ lastSync: date }),
+      setLspreadsheetYear: null,
+          astSync: (date) => set({ lastSync: date }),
       reset: () =>
         set({
           spreadsheetId: null,

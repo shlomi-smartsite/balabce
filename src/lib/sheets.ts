@@ -42,10 +42,11 @@ export async function getDriveClient() {
 export async function findExistingBalanceSheet(userEmail: string) {
   try {
     const drive = await getDriveClient()
+    const currentYear = new Date().getFullYear()
     
-    // חפש קבצים שמתחילים ב"ניהול הכנסות והוצאות" וכוללים את המייל
+    // חפש קבצים עבור השנה הנוכחית בלבד
     const response = await drive.files.list({
-      q: `name contains 'ניהול הכנסות והוצאות' and name contains '${userEmail}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+      q: `name contains 'ניהול הכנסות והוצאות' and name contains '${userEmail}' and name contains '${currentYear}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
       fields: 'files(id, name, createdTime)',
       spaces: 'drive',
       orderBy: 'createdTime desc', // הקובץ האחרון שנוצר
@@ -56,7 +57,7 @@ export async function findExistingBalanceSheet(userEmail: string) {
       return response.data.files[0].id || null
     }
     
-    console.log('No existing spreadsheet found for:', userEmail)
+    console.log(`No existing spreadsheet found for ${userEmail} - ${currentYear}`)
     return null
   } catch (error) {
     console.error('Error finding existing sheet:', error)
@@ -65,20 +66,24 @@ export async function findExistingBalanceSheet(userEmail: string) {
 }
 
 export async function createBalanceSheet(userId: string, userEmail: string) {
+  console.log('🔍 Searching for existing spreadsheet for:', userEmail)
+  
   // חפש קובץ קיים לפני יצירת חדש
   const existingId = await findExistingBalanceSheet(userEmail)
   if (existingId) {
-    console.log('Found existing spreadsheet:', existingId)
+    console.log('✅ Found existing spreadsheet:', existingId)
     return existingId
   }
 
+  console.log('📝 No existing file found, creating new spreadsheet...')
   const sheets = await getSheetsClient()
+  const currentYear = new Date().getFullYear()
   
   // Create new spreadsheet
   const spreadsheet = await sheets.spreadsheets.create({
     requestBody: {
       properties: {
-        title: `ניהול הכנסות והוצאות - ${userEmail}`,
+        title: `ניהול הכנסות והוצאות - ${userEmail} - ${currentYear}`,
       },
       sheets: [
         {
@@ -118,16 +123,28 @@ export async function createBalanceSheet(userId: string, userEmail: string) {
           values: [['קטגוריה', 'סוג']],
         },
         {
-          range: 'Categories!A2:B10',
+          range: 'Categories!A2:B20',
           values: [
+            // קטגוריות הכנסה
             ['משכורת', 'הכנסה'],
             ['פרילנס', 'הכנסה'],
+            ['השקעות', 'הכנסה'],
+            ['מתנות', 'הכנסה'],
+            ['החזרים', 'הכנסה'],
             ['אחר', 'הכנסה'],
+            // קטגוריות הוצאה
             ['מזון', 'הוצאה'],
+            ['סופרמרקט', 'הוצאה'],
             ['תחבורה', 'הוצאה'],
             ['בילויים', 'הוצאה'],
             ['קניות', 'הוצאה'],
             ['חשבונות', 'הוצאה'],
+            ['דיור', 'הוצאה'],
+            ['בריאות', 'הוצאה'],
+            ['חינוך', 'הוצאה'],
+            ['ספורט', 'הוצאה'],
+            ['טיפוח', 'הוצאה'],
+            ['ביגוד', 'הוצאה'],
             ['אחר', 'הוצאה'],
           ],
         },
@@ -146,6 +163,7 @@ export async function createBalanceSheet(userId: string, userEmail: string) {
     },
   })
 
+  console.log('✅ Spreadsheet created successfully:', spreadsheetId)
   return spreadsheetId
 }
 

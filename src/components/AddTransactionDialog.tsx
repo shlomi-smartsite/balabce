@@ -91,12 +91,12 @@ export function AddTransactionDialog({ onAdd }: AddTransactionDialogProps) {
                   setFormData({ ...formData, type: value, category: '' })
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="בחר סוג" />
+                <SelectTrigger className="font-bold">
+                  <SelectValue placeholder="בחר סוג" className="font-bold" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="הכנסה">הכנסה</SelectItem>
-                  <SelectItem value="הוצאה">הוצאה</SelectItem>
+                  <SelectItem value="הכנסה" className="font-bold">הכנסה</SelectItem>
+                  <SelectItem value="הוצאה" className="font-bold">הוצאה</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -107,12 +107,12 @@ export function AddTransactionDialog({ onAdd }: AddTransactionDialogProps) {
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="בחר קטגוריה" />
+                <SelectTrigger className="font-bold">
+                  <SelectValue placeholder="בחר קטגוריה" className="font-bold" />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredCategories.map((cat) => (
-                    <SelectItem key={cat.name} value={cat.name}>
+                    <SelectItem key={cat.name} value={cat.name} className="font-bold">
                       {cat.name}
                     </SelectItem>
                   ))}
@@ -149,14 +149,14 @@ export function AddTransactionDialog({ onAdd }: AddTransactionDialogProps) {
                 value={formData.paymentMethod}
                 onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="בחר אמצעי תשלום" />
+                <SelectTrigger className="font-bold">
+                  <SelectValue placeholder="בחר אמצעי תשלום" className="font-bold" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="מזומן">מזומן</SelectItem>
-                  <SelectItem value="אשראי">אשראי</SelectItem>
-                  <SelectItem value="העברה בנקאית">העברה בנקאית</SelectItem>
-                  <SelectItem value="אפליקציה">אפליקציה</SelectItem>
+                  <SelectItem value="מזומן" className="font-bold">מזומן</SelectItem>
+                  <SelectItem value="אשראי" className="font-bold">אשראי</SelectItem>
+                  <SelectItem value="העברה בנקאית" className="font-bold">העברה בנקאית</SelectItem>
+                  <SelectItem value="אפליקציה" className="font-bold">אפליקציה</SelectItem>
                 </SelectContent>
               </Select>
             </div>

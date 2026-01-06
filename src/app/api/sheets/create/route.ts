@@ -7,17 +7,21 @@ export async function POST(req: NextRequest) {
     const session = await auth()
     
     if (!session?.user) {
+      console.log('❌ No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('✅ Creating spreadsheet for:', session.user.email)
+    
     const spreadsheetId = await createBalanceSheet(
       session.user.email || '',
       session.user.email || ''
     )
 
+    console.log('✅ Spreadsheet created/found:', spreadsheetId)
     return NextResponse.json({ spreadsheetId })
   } catch (error) {
-    console.error('Error creating sheet:', error)
+    console.error('❌ Error creating sheet:', error)
     return NextResponse.json(
       { error: 'Failed to create spreadsheet' },
       { status: 500 }
