@@ -51,6 +51,7 @@ export default function Dashboard() {
     // בדוק אם המשתמש הנוכחי שונה מזה ששמור
     if (userEmail && currentEmail !== userEmail) {
       // משתמש אחר - צריך לאתחל מחדש
+      console.log('👤 Different user detected, reinitializing...')
       setSpreadsheetId('', currentEmail)
       setUserEmail(currentEmail)
       initializeSheet(currentEmail)
@@ -70,14 +71,18 @@ export default function Dashboard() {
       setUserEmail(currentEmail)
     }
     
-    // תמיד נסה למצוא/ליצור קובץ אם אין ID
+    // אם אין spreadsheetId - צור חדש
     if (!spreadsheetId) {
+      console.log('📝 No spreadsheet ID, creating new one...')
       initializeSheet(currentEmail)
-    } else {
-      // יש spreadsheet - סנכרן
+      return
+    }
+    
+    // יש spreadsheet - סנכרן (רק אם לא במצב loading)
+    if (!loading) {
       syncData()
     }
-  }, [session, spreadsheetId, userEmail, spreadsheetYear])
+  }, [session, spreadsheetId, userEmail, spreadsheetYear, loading])
 
   const initializeSheet = async (email: string) => {
     setLoading(true)
@@ -88,8 +93,10 @@ export default function Dashboard() {
       const data = await response.json()
       
       if (data.spreadsheetId) {
+        console.log('✅ Setting new spreadsheet ID:', data.spreadsheetId)
         setSpreadsheetId(data.spreadsheetId, email)
-        await syncData(data.spreadsheetId)
+        // אל תקרא ל-syncData מיד - תן לקובץ להיווצר
+        // useEffect יטפל בסנכרון אחרי שה-ID יתעדכן
       }
     } catch (error) {
       console.error('Error initializing sheet:', error)
