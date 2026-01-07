@@ -112,10 +112,12 @@ export default function Dashboard() {
       // אם הקובץ לא קיים (404 או 500), נקה ויצור חדש
       if (!transactionsRes.ok || !categoriesRes.ok) {
         console.log('❌ Spreadsheet not found, clearing and creating new one...')
+        // נקה את ה-ID הישן
         setSpreadsheetId('', session?.user?.email || '')
-        if (session?.user?.email) {
-          await initializeSheet(session.user.email)
-        }
+        setTransactions([])
+        setCategories([])
+        setSyncing(false)
+        // אל תקרא ל-initializeSheet כאן - תן ל-useEffect לטפל בזה
         return
       }
 
@@ -127,11 +129,10 @@ export default function Dashboard() {
       setLastSync(new Date())
     } catch (error) {
       console.error('Error syncing data:', error)
-      // בשגיאה, נקה ויצור חדש
+      // בשגיאה, נקה את ה-ID
       setSpreadsheetId('', session?.user?.email || '')
-      if (session?.user?.email) {
-        await initializeSheet(session.user.email)
-      }
+      setTransactions([])
+      setCategories([])
     } finally {
       setSyncing(false)
     }
