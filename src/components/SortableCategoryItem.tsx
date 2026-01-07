@@ -40,21 +40,22 @@ export function SortableCategoryItem({ id, name, type, onDelete, isDeleting }: S
       className={`flex items-center gap-2 p-3 ${bgColor} border ${borderColor} rounded-lg group ${hoverBg} transition-colors`}
     >
       <button
-        className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/50 rounded"
+        className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/50 rounded touch-none"
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="h-4 w-4 text-slate-400" />
+        <GripVertical className="h-4 w-4 text-gray-600" />
       </button>
-      <span className="flex-1 font-medium text-slate-900">{name}</span>
+      <span className="flex-1 font-bold text-gray-900">{name}</span>
       <Button
         variant="ghost"
         size="sm"
         onClick={onDelete}
         disabled={isDeleting}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+        className="text-red-600 hover:text-red-700 hover:bg-red-100 p-2"
+        title="מחק קטגוריה"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-5 w-5" />
       </Button>
     </div>
   )
