@@ -19,6 +19,7 @@ export default function Dashboard() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
 
   const {
     spreadsheetId,
@@ -54,7 +55,9 @@ export default function Dashboard() {
       console.log('👤 Different user detected, reinitializing...')
       setSpreadsheetId('', currentEmail)
       setUserEmail(currentEmail)
-      initializeSheet(currentEmail)
+      if (!isInitializing) {
+        initializeSheet(currentEmail)
+      }
       return
     }
     
@@ -62,7 +65,9 @@ export default function Dashboard() {
     if (spreadsheetYear && currentYear !== spreadsheetYear) {
       console.log(`🎉 שנה חדשה! ${spreadsheetYear} → ${currentYear}. יוצר קובץ חדש...`)
       setSpreadsheetId('', currentEmail)
-      initializeSheet(currentEmail)
+      if (!isInitializing) {
+        initializeSheet(currentEmail)
+      }
       return
     }
     
@@ -71,20 +76,26 @@ export default function Dashboard() {
       setUserEmail(currentEmail)
     }
     
-    // אם אין spreadsheetId - צור חדש
-    if (!spreadsheetId) {
+    // אם אין spreadsheetId - צור חדש (רק אם לא כבר באמצע יצירה)
+    if (!spreadsheetId && !isInitializing) {
       console.log('📝 No spreadsheet ID, creating new one...')
       initializeSheet(currentEmail)
       return
     }
     
-    // יש spreadsheet - סנכרן (רק אם לא במצב loading)
-    if (!loading) {
+    // יש spreadsheet - סנכרן (רק אם לא במצב loading או initializing)
+    if (spreadsheetId && !loading && !isInitializing) {
       syncData()
     }
-  }, [session, spreadsheetId, userEmail, spreadsheetYear, loading])
+  }, [session, spreadsheetId, userEmail, spreadsheetYear, loading, isInitializing])
 
   const initializeSheet = async (email: string) => {
+    if (isInitializing) {
+      console.log('⏸️ Already initializing, skipping...')
+      return
+    }
+    
+    setIsInitializing(true)
     setLoading(true)
     try {
       const response = await fetch('/api/sheets/create', {
@@ -102,6 +113,7 @@ export default function Dashboard() {
       console.error('Error initializing sheet:', error)
     } finally {
       setLoading(false)
+      setIsInitializing(false)
     }
   }
 
