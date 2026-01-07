@@ -210,9 +210,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
-                Balance
-              </h1>
+              <img src="/logo.png" alt="Balance" className="h-10 w-10 sm:h-12 sm:w-12" />
               {spreadsheetId && (
                 <a
                   href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}`}
