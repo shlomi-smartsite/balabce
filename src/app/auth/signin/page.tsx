@@ -112,6 +112,17 @@ export default function SignIn() {
           </CardContent>
         </Card>
       </div>
+      
+      <div className="text-center mt-8">
+        <a 
+          href="/privacy" 
+          className="text-sm text-slate-600 hover:text-blue-600 underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          מדיניות פרטיות
+        </a>
+      </div>
     </div>
   )
 }
