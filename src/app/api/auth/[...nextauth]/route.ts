@@ -11,7 +11,6 @@ export const authConfig: NextAuthConfig = {
         params: {
           scope: 'openid email profile https://www.googleapis.com/auth/drive.file',
           access_type: 'offline',
-          prompt: 'consent',
         },
       },
     }),
@@ -34,8 +33,21 @@ export const authConfig: NextAuthConfig = {
     signIn: '/auth/signin',
   },
   session: {
+    strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 ימים
     updateAge: 24 * 60 * 60, // עדכון כל 24 שעות
+  },
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60,
+        path: '/',
+      },
+    },
   },
 }
 
