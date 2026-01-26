@@ -1,11 +1,23 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Wallet, Shield, TrendingUp, Lock } from 'lucide-react'
 
 export default function SignIn() {
+  const { data: session } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    // אם כבר מחובר, תעבור ישר לדשבורד
+    if (session) {
+      router.push('/dashboard')
+    }
+  }, [session, router])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 flex items-center justify-center p-4">
       <div className="max-w-5xl w-full grid md:grid-cols-2 gap-8 items-center">
