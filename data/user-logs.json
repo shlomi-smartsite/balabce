@@ -1,0 +1,32 @@
+[
+  {
+    "email": "ah.shlomi7@gmail.com",
+    "timestamp": "2026-01-26T17:34:37.817Z",
+    "action": "login"
+  },
+  {
+    "email": "ah.shlomi7@gmail.com",
+    "timestamp": "2026-01-26T17:40:14.779Z",
+    "action": "login"
+  },
+  {
+    "email": "ah.shlomi7@gmail.com",
+    "timestamp": "2026-01-26T17:42:44.375Z",
+    "date": "26.1.2026"
+  },
+  {
+    "email": "sinitorg@gmail.com",
+    "timestamp": "2026-01-26T17:44:58.323Z",
+    "date": "26.1.2026"
+  },
+  {
+    "email": "sinitorg@gmail.com",
+    "timestamp": "2026-01-26T17:46:14.364Z",
+    "date": "26.1.2026"
+  },
+  {
+    "email": "ah.shlomi7@gmail.com",
+    "timestamp": "2026-01-26T17:46:37.814Z",
+    "date": "26.1.2026"
+  }
+]

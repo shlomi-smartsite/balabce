@@ -52,6 +52,18 @@ export default function Dashboard() {
     }
   }, [status, router])
 
+  // רשום התחברות כשהמשתמש נכנס
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.email) {
+      // שליחה אסינכרונית - לא משפיע על הטעינה
+      fetch('/api/user/log', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: session.user.email })
+      }).catch(err => console.error('Failed to log user:', err))
+    }
+  }, [status, session?.user?.email])
+
   useEffect(() => {
     if (!session) return
     
