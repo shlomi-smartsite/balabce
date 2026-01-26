@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useStore } from '@/store/useStore'
+import { useStore, Transaction } from '@/store/useStore'
 import { StatsCards } from '@/components/StatsCards'
 import { AddTransactionDialog } from '@/components/AddTransactionDialog'
 import { ManageCategoriesDialog } from '@/components/ManageCategoriesDialog'
 import { MobileMenu } from '@/components/MobileMenu'
 import { TransactionsList } from '@/components/TransactionsList'
+import { FilterSort } from '@/components/FilterSort'
 import { CategoryChart } from '@/components/CategoryChart'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
 
   const {
     spreadsheetId,
@@ -33,7 +35,16 @@ export default function Dashboard() {
     setTransactions,
     setCategories,
     setLastSync,
+    updateTransaction,
+    deleteTransaction,
   } = useStore()
+
+  // אתחל filteredTransactions כשה-transactions משתנות
+  useEffect(() => {
+    setFilteredTransactions([...transactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    ))
+  }, [transactions])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -176,6 +187,66 @@ export default function Dashboard() {
     }
   }
 
+  const handleUpdateTransaction = async (updatedTransaction: Transaction) => {
+    if (!spreadsheetId) return
+    
+    try {
+      console.log('💾 Saving transaction:', updatedTransaction)
+      const response = await fetch('/api/sheets/transactions/edit', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId,
+          transactionId: updatedTransaction.id,
+          updates: updatedTransaction,
+        }),
+      })
+
+      console.log('Response status:', response.status)
+      const responseData = await response.json()
+      console.log('Response data:', responseData)
+
+      if (response.ok) {
+        console.log('✅ Update successful, syncing data...')
+        // עדכן ב-store
+        updateTransaction(updatedTransaction.id, updatedTransaction)
+        // סנכרן כדי לוודא שהנתונים תואמים
+        await syncData()
+        console.log('✅ Sync complete')
+      } else {
+        console.error('❌ Update failed:', responseData)
+        alert('שגיאה בעדכון: ' + responseData.error)
+      }
+    } catch (error) {
+      console.error('Error updating transaction:', error)
+      alert('שגיאה בעדכון העסקה')
+    }
+  }
+
+  const handleDeleteTransaction = async (id: number) => {
+    if (!spreadsheetId) return
+
+    try {
+      const response = await fetch('/api/sheets/transactions/edit', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId,
+          transactionId: id,
+        }),
+      })
+
+      if (response.ok) {
+        deleteTransaction(id)
+        // סנכרן כדי לוודא שהנתונים תואמים
+        await syncData()
+      }
+    } catch (error) {
+      console.error('Error deleting transaction:', error)
+      alert('שגיאה במחיקת העסקה')
+    }
+  }
+
   const handleCategoryUpdate = async () => {
     if (!spreadsheetId) return
     await syncData()
@@ -304,7 +375,18 @@ export default function Dashboard() {
           <CategoryChart transactions={transactions} type="הכנסה" />
         </div>
 
-        <TransactionsList transactions={transactions} />
+        <FilterSort 
+          transactions={transactions}
+          categories={categories}
+          onFiltered={setFilteredTransactions}
+        />
+
+        <TransactionsList 
+          transactions={filteredTransactions}
+          categories={categories}
+          onUpdate={handleUpdateTransaction}
+          onDelete={handleDeleteTransaction}
+        />
       </main>
     </div>
   )

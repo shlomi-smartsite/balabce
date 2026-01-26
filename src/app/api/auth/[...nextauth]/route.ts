@@ -33,6 +33,10 @@ export const authConfig: NextAuthConfig = {
   pages: {
     signIn: '/auth/signin',
   },
+  session: {
+    maxAge: 30 * 24 * 60 * 60, // 30 ימים
+    updateAge: 24 * 60 * 60, // עדכון כל 24 שעות
+  },
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)

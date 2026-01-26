@@ -30,6 +30,8 @@ interface StoreState {
   setTransactions: (transactions: Transaction[]) => void
   setCategories: (categories: Category[]) => void
   addTransaction: (transaction: Transaction) => void
+  updateTransaction: (id: number, transaction: Partial<Transaction>) => void
+  deleteTransaction: (id: number) => void
   setLoading: (isLoading: boolean) => void
   setLastSync: (date: Date) => void
   reset: () => void
@@ -57,6 +59,16 @@ export const useStore = create<StoreState>()(
       addTransaction: (transaction) =>
         set((state) => ({
           transactions: [...state.transactions, transaction],
+        })),
+      updateTransaction: (id, updates) =>
+        set((state) => ({
+          transactions: state.transactions.map((t) =>
+            t.id === id ? { ...t, ...updates } : t
+          ),
+        })),
+      deleteTransaction: (id) =>
+        set((state) => ({
+          transactions: state.transactions.filter((t) => t.id !== id),
         })),
       setLoading: (isLoading) => set({ isLoading }),
       setLastSync: (date) => set({ lastSync: date }),

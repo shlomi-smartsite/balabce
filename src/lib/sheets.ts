@@ -177,6 +177,8 @@ export async function getTransactions(spreadsheetId: string) {
 
   const rows = response.data.values || []
   
+  console.log('📖 Reading transactions from sheet:', { rowCount: rows.length, firstRows: rows.slice(0, 3) })
+  
   return rows.map((row, index) => ({
     id: index + 2, // Row number in sheet
     date: row[0] || '',
