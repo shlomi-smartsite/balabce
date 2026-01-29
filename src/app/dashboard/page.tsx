@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useStore, Transaction } from '@/store/useStore'
@@ -22,6 +22,8 @@ export default function Dashboard() {
   const [syncing, setSyncing] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+  const hasLoggedRef = useRef(false)
+  const hasInitializedRef = useRef(false)
 
   const {
     spreadsheetId,
@@ -52,9 +54,10 @@ export default function Dashboard() {
     }
   }, [status, router])
 
-  // רשום התחברות כשהמשתמש נכנס
+  // רשום התחברות כשהמשתמש נכנס (פעם אחת בלבד!)
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.email) {
+    if (status === 'authenticated' && session?.user?.email && !hasLoggedRef.current) {
+      hasLoggedRef.current = true
       // שליחה אסינכרונית - לא משפיע על הטעינה
       fetch('/api/user/log', { 
         method: 'POST',
@@ -65,7 +68,7 @@ export default function Dashboard() {
   }, [status, session?.user?.email])
 
   useEffect(() => {
-    if (!session) return
+    if (!session || status !== 'authenticated') return
     
     const currentEmail = session.user?.email
     if (!currentEmail) return
@@ -74,8 +77,8 @@ export default function Dashboard() {
 
     // בדוק אם המשתמש הנוכחי שונה מזה ששמור
     if (userEmail && currentEmail !== userEmail) {
-      // משתמש אחר - צריך לאתחל מחדש
       console.log('👤 Different user detected, reinitializing...')
+      hasInitializedRef.current = false
       setSpreadsheetId('', currentEmail)
       setUserEmail(currentEmail)
       if (!isInitializing) {
@@ -87,6 +90,7 @@ export default function Dashboard() {
     // בדוק אם השנה השתנתה - צור קובץ חדש לשנה החדשה!
     if (spreadsheetYear && currentYear !== spreadsheetYear) {
       console.log(`🎉 שנה חדשה! ${spreadsheetYear} → ${currentYear}. יוצר קובץ חדש...`)
+      hasInitializedRef.current = false
       setSpreadsheetId('', currentEmail)
       if (!isInitializing) {
         initializeSheet(currentEmail)
@@ -99,18 +103,19 @@ export default function Dashboard() {
       setUserEmail(currentEmail)
     }
     
-    // אם אין spreadsheetId - צור חדש (רק אם לא כבר באמצע יצירה)
-    if (!spreadsheetId && !isInitializing) {
+    // אם אין spreadsheetId - צור חדש (רק פעם אחת!)
+    if (!spreadsheetId && !isInitializing && !hasInitializedRef.current) {
       console.log('📝 No spreadsheet ID, creating new one...')
+      hasInitializedRef.current = true
       initializeSheet(currentEmail)
       return
     }
     
     // יש spreadsheet - סנכרן (רק אם לא במצב loading או initializing)
-    if (spreadsheetId && !loading && !isInitializing) {
+    if (spreadsheetId && !loading && !isInitializing && hasInitializedRef.current) {
       syncData()
     }
-  }, [session, spreadsheetId, userEmail, spreadsheetYear, loading, isInitializing])
+  }, [status, spreadsheetId, userEmail, spreadsheetYear])
 
   const initializeSheet = async (email: string) => {
     if (isInitializing) {

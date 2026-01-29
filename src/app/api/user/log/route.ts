@@ -56,10 +56,8 @@ export async function GET() {
   try {
     const logs = await readLogs()
     
-    // ספירת משתמשים ייחודיים
     const uniqueUsers = new Set(logs.map(log => log.email))
     
-    // ספירת התחברויות לפי משתמש
     const userStats = Array.from(uniqueUsers).map(email => ({
       email,
       loginCount: logs.filter(log => log.email === email).length,
@@ -72,7 +70,7 @@ export async function GET() {
       totalLogins: logs.length,
       uniqueUsers: uniqueUsers.size,
       userStats: userStats.sort((a, b) => b.loginCount - a.loginCount),
-      logs: logs.slice(-100) // אחרוני 100 התחברויות
+      logs: logs.slice(-100)
     })
   } catch (error) {
     console.error('Error reading logs:', error)

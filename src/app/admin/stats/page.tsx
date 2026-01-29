@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { Card } from '@/components/ui/card'
 
@@ -21,14 +21,18 @@ export default function StatsPage() {
   const { data: session, status } = useSession()
   const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const hasFetchedRef = useRef(false)
 
   const ADMIN_EMAIL = 'ah.shlomi7@gmail.com'
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.email === ADMIN_EMAIL) {
+    if (status === 'authenticated' && session?.user?.email === ADMIN_EMAIL && !hasFetchedRef.current) {
+      hasFetchedRef.current = true
       fetchStats()
+    } else if (status === 'authenticated' && session?.user?.email !== ADMIN_EMAIL) {
+      setLoading(false)
     }
-  }, [status, session])
+  }, [status, session?.user?.email])
 
   const fetchStats = async () => {
     try {

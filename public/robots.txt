@@ -1,0 +1,6 @@
+# Block all bots from the entire site
+User-agent: *
+Disallow: /
+
+# Allow only sitemap if needed
+Allow: /sitemap.xml
