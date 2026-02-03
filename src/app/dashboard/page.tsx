@@ -442,7 +442,7 @@ export default function Dashboard() {
           transactions={transactions}
           categories={categories}
           onFiltered={setFilteredTransactions}
-          lastSync={lastSync}
+          lastSync={lastSync || undefined}
         />
 
         <TransactionsList 
