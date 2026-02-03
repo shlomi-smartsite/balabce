@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     const stats = getStats()
-    const logs = readLogs()
+    const logs = await readLogs()
 
     return NextResponse.json({
       stats,
