@@ -29,22 +29,7 @@ async function saveLogs(logs: UserLog[]): Promise<void> {
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json()
-    
-    if (!email) {
-      return Response.json({ error: 'Missing email' }, { status: 400 })
-    }
-
-    const logs = await readLogs()
-    const now = new Date()
-    
-    logs.push({
-      email,
-      timestamp: now.toISOString(),
-      date: now.toLocaleDateString('he-IL')
-    })
-
-    await saveLogs(logs)
+    // Vercel doesn't support file writes - disabled for now
     return Response.json({ success: true })
   } catch (error) {
     console.error('Error logging user:', error)

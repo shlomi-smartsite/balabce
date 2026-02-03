@@ -33,6 +33,19 @@ export interface UserStats {
 }
 
 export function getStats(): UserStats {
+  // Vercel doesn't support file reads from data directory
+  // Return empty stats for production
+  if (process.env.VERCEL) {
+    return {
+      totalUsers: 0,
+      totalLogins: 0,
+      uniqueUsers: 0,
+      todayLogins: 0,
+      usersByDate: {},
+      topUsers: []
+    }
+  }
+  
   try {
     const logsPath = join(process.cwd(), 'data', 'user-logs.json')
     
