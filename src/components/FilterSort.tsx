@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -27,12 +27,23 @@ export function FilterSort({
   const [minAmount, setMinAmount] = useState<string>('')
   const [maxAmount, setMaxAmount] = useState<string>('')
   const [hasFilters, setHasFilters] = useState(false)
+  const lastTransactionsLengthRef = useRef(0)
 
-  // כשמשנים את המיון או העסקאות - הפעל אוטומטית
+  // כשמשנים את המיון או כשהעסקאות משתנות - הפעל אוטומטית
+  useEffect(() => {
+    // רק אם באמת השתנה מספר העסקאות
+    if (transactions.length !== lastTransactionsLengthRef.current) {
+      lastTransactionsLengthRef.current = transactions.length
+      applyFilters()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions.length])
+
+  // כשמשנים את המיון - הפעל מיד
   useEffect(() => {
     applyFilters()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, transactions.length])
+  }, [sortBy])
 
   const applyFilters = () => {
     let filtered = [...transactions]

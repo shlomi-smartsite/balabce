@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
   const hasLoggedRef = useRef(false)
   const hasInitializedRef = useRef(false)
+  const hasSyncedRef = useRef(false)
 
   const {
     spreadsheetId,
@@ -40,13 +41,6 @@ export default function Dashboard() {
     updateTransaction,
     deleteTransaction,
   } = useStore()
-
-  // אתחל filteredTransactions כשה-transactions משתנות
-  useEffect(() => {
-    setFilteredTransactions([...transactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    ))
-  }, [transactions])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -79,6 +73,7 @@ export default function Dashboard() {
     if (userEmail && currentEmail !== userEmail) {
       console.log('👤 Different user detected, reinitializing...')
       hasInitializedRef.current = false
+      hasSyncedRef.current = false
       setSpreadsheetId('', currentEmail)
       setUserEmail(currentEmail)
       if (!isInitializing) {
@@ -91,6 +86,7 @@ export default function Dashboard() {
     if (spreadsheetYear && currentYear !== spreadsheetYear) {
       console.log(`🎉 שנה חדשה! ${spreadsheetYear} → ${currentYear}. יוצר קובץ חדש...`)
       hasInitializedRef.current = false
+      hasSyncedRef.current = false
       setSpreadsheetId('', currentEmail)
       if (!isInitializing) {
         initializeSheet(currentEmail)
@@ -111,12 +107,11 @@ export default function Dashboard() {
       return
     }
     
-    // יש spreadsheet - סנכרן (רק פעם אחת, לא בכל שינוי!)
-    if (spreadsheetId && !loading && !isInitializing && hasInitializedRef.current) {
-      // בדוק אם כבר סינכרנו בעבר
-      if (!lastSync) {
-        syncData()
-      }
+    // יש spreadsheet - סנכרן (רק פעם אחת בלבד!)
+    if (spreadsheetId && !loading && !isInitializing && hasInitializedRef.current && !hasSyncedRef.current) {
+      console.log('🔄 First sync for spreadsheet:', spreadsheetId)
+      hasSyncedRef.current = true
+      syncData()
     }
   }, [status, spreadsheetId, userEmail, spreadsheetYear, session])
 
@@ -148,9 +143,15 @@ export default function Dashboard() {
     }
   }
 
-  const syncData = async (sheetId?: string) => {
+  const syncData = async (sheetId?: string, force = false) => {
     const id = sheetId || spreadsheetId
     if (!id) return
+
+    // אם זה לא force ו-hasSyncedRef כבר true, דלג
+    if (!force && hasSyncedRef.current) {
+      console.log('⏭️ Already synced, skipping...')
+      return
+    }
 
     setSyncing(true)
     try {
@@ -167,6 +168,7 @@ export default function Dashboard() {
         setTransactions([])
         setCategories([])
         setSyncing(false)
+        hasSyncedRef.current = false
         // אל תקרא ל-initializeSheet כאן - תן ל-useEffect לטפל בזה
         return
       }
@@ -177,12 +179,14 @@ export default function Dashboard() {
       setTransactions(transactionsData.transactions || [])
       setCategories(categoriesData.categories || [])
       setLastSync(new Date())
+      hasSyncedRef.current = true
     } catch (error) {
       console.error('Error syncing data:', error)
       // בשגיאה, נקה את ה-ID
       setSpreadsheetId('', session?.user?.email || '')
       setTransactions([])
       setCategories([])
+      hasSyncedRef.current = false
     } finally {
       setSyncing(false)
     }
@@ -200,7 +204,7 @@ export default function Dashboard() {
 
       if (!response.ok) throw new Error('Failed to add transaction')
 
-      await syncData()
+      await syncData(undefined, true)
     } catch (error) {
       console.error('Error adding transaction:', error)
       throw error
@@ -231,7 +235,7 @@ export default function Dashboard() {
         // עדכן ב-store
         updateTransaction(updatedTransaction.id, updatedTransaction)
         // סנכרן כדי לוודא שהנתונים תואמים
-        await syncData()
+        await syncData(undefined, true)
         console.log('✅ Sync complete')
       } else {
         console.error('❌ Update failed:', responseData)
@@ -259,7 +263,7 @@ export default function Dashboard() {
       if (response.ok) {
         deleteTransaction(id)
         // סנכרן כדי לוודא שהנתונים תואמים
-        await syncData()
+        await syncData(undefined, true)
       }
     } catch (error) {
       console.error('Error deleting transaction:', error)
@@ -269,7 +273,7 @@ export default function Dashboard() {
 
   const handleCategoryUpdate = async () => {
     if (!spreadsheetId) return
-    await syncData()
+    await syncData(undefined, true)
   }
 
   const totalIncome = transactions
@@ -336,7 +340,7 @@ export default function Dashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => syncData()}
+                  onClick={() => syncData(undefined, true)}
                   disabled={syncing}
                 >
                   <RefreshCw className={`h-4 w-4 ml-2 ${syncing ? 'animate-spin' : ''}`} />
@@ -353,7 +357,7 @@ export default function Dashboard() {
                 variant="outline"
                 size="sm"
                 className="lg:hidden"
-                onClick={() => syncData()}
+                onClick={() => syncData(undefined, true)}
                 disabled={syncing}
               >
                 <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
