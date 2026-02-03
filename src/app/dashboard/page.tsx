@@ -111,11 +111,14 @@ export default function Dashboard() {
       return
     }
     
-    // יש spreadsheet - סנכרן (רק אם לא במצב loading או initializing)
+    // יש spreadsheet - סנכרן (רק פעם אחת, לא בכל שינוי!)
     if (spreadsheetId && !loading && !isInitializing && hasInitializedRef.current) {
-      syncData()
+      // בדוק אם כבר סינכרנו בעבר
+      if (!lastSync) {
+        syncData()
+      }
     }
-  }, [status, spreadsheetId, userEmail, spreadsheetYear])
+  }, [status, spreadsheetId, userEmail, spreadsheetYear, session])
 
   const initializeSheet = async (email: string) => {
     if (isInitializing) {

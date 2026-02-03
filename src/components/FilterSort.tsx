@@ -28,15 +28,11 @@ export function FilterSort({
   const [maxAmount, setMaxAmount] = useState<string>('')
   const [hasFilters, setHasFilters] = useState(false)
 
-  // כשמשנים את המיון - הפעל אוטומטית
+  // כשמשנים את המיון או העסקאות - הפעל אוטומטית
   useEffect(() => {
     applyFilters()
-  }, [sortBy])
-
-  // כשמשנים את העסקאות - הפעל שוב את הסינון
-  useEffect(() => {
-    applyFilters()
-  }, [transactions])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, transactions.length])
 
   const applyFilters = () => {
     let filtered = [...transactions]
@@ -80,7 +76,6 @@ export function FilterSort({
         case 'date-asc':
           return new Date(a.date).getTime() - new Date(b.date).getTime()
         case 'amount-desc':
-          console.log('💰 Sorting by amount desc:', a.amount, b.amount, b.amount - a.amount)
           return b.amount - a.amount
         case 'amount-asc':
           return a.amount - b.amount
@@ -89,7 +84,6 @@ export function FilterSort({
       }
     })
 
-    console.log('🔍 Filtered & sorted transactions:', { type, category, sortBy, searchText, count: filtered.length })
     onFiltered(filtered)
     setHasFilters(type !== 'הכל' || category !== 'all' || searchText !== '' || minAmount !== '' || maxAmount !== '')
   }
