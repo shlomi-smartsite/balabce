@@ -26,10 +26,16 @@ export async function POST(req: NextRequest) {
     console.log('✅ Transaction added successfully!')
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error adding transaction:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status,
+      code: error?.code
+    })
     return NextResponse.json(
-      { error: 'Failed to add transaction' },
+      { error: error?.message || 'Failed to add transaction' },
       { status: 500 }
     )
   }

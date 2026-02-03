@@ -130,12 +130,30 @@ export async function DELETE(request: NextRequest) {
     }
 
     // מחק את השורה
+    // קודם צריך למצוא את ה-sheetId של Transactions
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId,
+    })
+
+    const transactionsSheet = spreadsheet.data.sheets?.find(
+      (sheet) => sheet.properties?.title === 'Transactions'
+    )
+
+    if (!transactionsSheet || transactionsSheet.properties?.sheetId === undefined) {
+      return NextResponse.json(
+        { error: 'Transactions sheet not found' },
+        { status: 404 }
+      )
+    }
+
+    const sheetId = transactionsSheet.properties.sheetId
+
     const batchUpdateRequest = {
       requests: [
         {
           deleteDimension: {
             range: {
-              sheetId: 0, // Sheet ID של 'Transactions'
+              sheetId: sheetId,
               dimension: 'ROWS',
               startIndex: rowIndex + 1, // +1 כי שורה ראשונה היא header
               endIndex: rowIndex + 2,

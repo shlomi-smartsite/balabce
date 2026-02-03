@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [syncing, setSyncing] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+  const [syncCounter, setSyncCounter] = useState(0)
   const hasLoggedRef = useRef(false)
   const hasInitializedRef = useRef(false)
   const hasSyncedRef = useRef(false)
@@ -147,6 +148,8 @@ export default function Dashboard() {
     const id = sheetId || spreadsheetId
     if (!id) return
 
+    console.log('🔄 syncData called:', { force, hasSynced: hasSyncedRef.current })
+
     // אם זה לא force ו-hasSyncedRef כבר true, דלג
     if (!force && hasSyncedRef.current) {
       console.log('⏭️ Already synced, skipping...')
@@ -155,6 +158,7 @@ export default function Dashboard() {
 
     setSyncing(true)
     try {
+      console.log('🌐 Fetching from Google Sheets...')
       const [transactionsRes, categoriesRes] = await Promise.all([
         fetch(`/api/sheets/transactions?spreadsheetId=${id}`),
         fetch(`/api/sheets/categories?spreadsheetId=${id}`),
@@ -176,10 +180,17 @@ export default function Dashboard() {
       const transactionsData = await transactionsRes.json()
       const categoriesData = await categoriesRes.json()
 
+      console.log('✅ Synced data:', { 
+        transactions: transactionsData.transactions?.length, 
+        categories: categoriesData.categories?.length 
+      })
+
       setTransactions(transactionsData.transactions || [])
       setCategories(categoriesData.categories || [])
       setLastSync(new Date())
-      hasSyncedRef.current = true
+      setSyncCounter(prev => prev + 1)
+      console.log('📊 Current transactions count in store:', (transactionsData.transactions || []).length)
+      if (!force) hasSyncedRef.current = true
     } catch (error) {
       console.error('Error syncing data:', error)
       // בשגיאה, נקה את ה-ID
@@ -193,18 +204,32 @@ export default function Dashboard() {
   }
 
   const handleAddTransaction = async (transaction: any) => {
-    if (!spreadsheetId) return
+    if (!spreadsheetId) {
+      console.log('❌ No spreadsheetId')
+      return
+    }
 
     try {
+      console.log('📝 Adding transaction to Google Sheets...')
       const response = await fetch('/api/sheets/transactions/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ spreadsheetId, transaction }),
       })
 
-      if (!response.ok) throw new Error('Failed to add transaction')
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('❌ Server error:', errorData)
+        throw new Error(errorData.error || 'Failed to add transaction')
+      }
 
+      console.log('✅ Transaction added, waiting for Google Sheets to update...')
+      // תן לגוגל שיטס זמן לעדכן
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      console.log('🔄 Now syncing...')
       await syncData(undefined, true)
+      console.log('✅ Sync completed!')
     } catch (error) {
       console.error('Error adding transaction:', error)
       throw error
@@ -232,6 +257,8 @@ export default function Dashboard() {
 
       if (response.ok) {
         console.log('✅ Update successful, syncing data...')
+        // תן לגוגל שיטס זמן לעדכן
+        await new Promise(resolve => setTimeout(resolve, 500))
         // עדכן ב-store
         updateTransaction(updatedTransaction.id, updatedTransaction)
         // סנכרן כדי לוודא שהנתונים תואמים
@@ -251,6 +278,7 @@ export default function Dashboard() {
     if (!spreadsheetId) return
 
     try {
+      console.log('🗑️ Deleting transaction:', id)
       const response = await fetch('/api/sheets/transactions/edit', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -260,10 +288,20 @@ export default function Dashboard() {
         }),
       })
 
+      console.log('Delete response status:', response.status)
+
       if (response.ok) {
-        deleteTransaction(id)
-        // סנכרן כדי לוודא שהנתונים תואמים
+        console.log('✅ Delete successful, waiting...')
+        // תן לגוגל שיטס זמן לעדכן
+        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log('🔄 Starting sync after delete...')
+        // סנכרן מהשרת - זה יעדכן את כל ה-IDs נכון
         await syncData(undefined, true)
+        console.log('✅ Sync after delete completed!')
+      } else {
+        const errorData = await response.json()
+        console.error('❌ Delete failed:', errorData)
+        alert('שגיאה במחיקת העסקה')
       }
     } catch (error) {
       console.error('Error deleting transaction:', error)
@@ -400,9 +438,11 @@ export default function Dashboard() {
         </div>
 
         <FilterSort 
+          key={syncCounter}
           transactions={transactions}
           categories={categories}
           onFiltered={setFilteredTransactions}
+          lastSync={lastSync}
         />
 
         <TransactionsList 

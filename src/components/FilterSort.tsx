@@ -13,12 +13,14 @@ interface FilterSortProps {
   transactions: Transaction[]
   categories: { name: string; type: 'הכנסה' | 'הוצאה' }[]
   onFiltered: (transactions: Transaction[]) => void
+  lastSync?: Date
 }
 
 export function FilterSort({ 
   transactions, 
   categories,
   onFiltered,
+  lastSync,
 }: FilterSortProps) {
   const [type, setType] = useState<'הכנסה' | 'הוצאה' | 'הכל'>('הכל')
   const [category, setCategory] = useState<string>('all')
@@ -27,17 +29,12 @@ export function FilterSort({
   const [minAmount, setMinAmount] = useState<string>('')
   const [maxAmount, setMaxAmount] = useState<string>('')
   const [hasFilters, setHasFilters] = useState(false)
-  const lastTransactionsLengthRef = useRef(0)
 
-  // כשמשנים את המיון או כשהעסקאות משתנות - הפעל אוטומטית
+  // כשהעסקאות משתנות - הפעל אוטומטית
   useEffect(() => {
-    // רק אם באמת השתנה מספר העסקאות
-    if (transactions.length !== lastTransactionsLengthRef.current) {
-      lastTransactionsLengthRef.current = transactions.length
-      applyFilters()
-    }
+    applyFilters()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions.length])
+  }, [transactions, transactions.length, lastSync])
 
   // כשמשנים את המיון - הפעל מיד
   useEffect(() => {
@@ -82,14 +79,26 @@ export function FilterSort({
     // מיון
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'date-desc':
-          return new Date(b.date).getTime() - new Date(a.date).getTime()
-        case 'date-asc':
-          return new Date(a.date).getTime() - new Date(b.date).getTime()
-        case 'amount-desc':
-          return b.amount - a.amount
-        case 'amount-asc':
-          return a.amount - b.amount
+        case 'date-desc': {
+          const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime()
+          // אם התאריכים זהים, מיין לפי ID (גדול ראשון = חדש ראשון)
+          return dateDiff !== 0 ? dateDiff : b.id - a.id
+        }
+        case 'date-asc': {
+          const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime()
+          // אם התאריכים זהים, מיין לפי ID (קטן ראשון = ישן ראשון)
+          return dateDiff !== 0 ? dateDiff : a.id - b.id
+        }
+        case 'amount-desc': {
+          const amountDiff = b.amount - a.amount
+          // אם הסכומים זהים, מיין לפי תאריך (חדש ראשון)
+          return amountDiff !== 0 ? amountDiff : new Date(b.date).getTime() - new Date(a.date).getTime()
+        }
+        case 'amount-asc': {
+          const amountDiff = a.amount - b.amount
+          // אם הסכומים זהים, מיין לפי תאריך (חדש ראשון)
+          return amountDiff !== 0 ? amountDiff : new Date(b.date).getTime() - new Date(a.date).getTime()
+        }
         default:
           return 0
       }
@@ -107,9 +116,10 @@ export function FilterSort({
     setMinAmount('')
     setMaxAmount('')
     setHasFilters(false)
-    onFiltered([...transactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    ))
+    onFiltered([...transactions].sort((a, b) => {
+      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime()
+      return dateDiff !== 0 ? dateDiff : b.id - a.id
+    }))
   }
 
   const availableCategories = type === 'הכל' 
