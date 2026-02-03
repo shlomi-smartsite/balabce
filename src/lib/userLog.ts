@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises'
+import { readFile, readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
 const LOGS_FILE = join(process.cwd(), 'data', 'user-logs.json')
@@ -11,7 +11,12 @@ export interface UserLog {
 
 export async function readLogs(): Promise<UserLog[]> {
   try {
-    const data = await readFile(LOGS_FILE, 'utf-8')
+    const data = await new Promise<string>((resolve, reject) => {
+      readFile(LOGS_FILE, 'utf-8', (err, data) => {
+        if (err) reject(err)
+        else resolve(data)
+      })
+    })
     return JSON.parse(data)
   } catch {
     return []
@@ -30,9 +35,8 @@ export interface UserStats {
 export function getStats(): UserStats {
   try {
     const logsPath = join(process.cwd(), 'data', 'user-logs.json')
-    const fs = require('fs')
     
-    if (!fs.existsSync(logsPath)) {
+    if (!existsSync(logsPath)) {
       return {
         totalUsers: 0,
         totalLogins: 0,
@@ -43,7 +47,7 @@ export function getStats(): UserStats {
       }
     }
 
-    const data = fs.readFileSync(logsPath, 'utf-8')
+    const data = readFileSync(logsPath, 'utf-8')
     const logs: UserLog[] = JSON.parse(data)
 
     const uniqueEmails = new Set(logs.map(l => l.email))
